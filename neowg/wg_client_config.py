@@ -1,3 +1,4 @@
+from io import BytesIO
 from pathlib import Path
 
 from neowg.key_pair import KeyPair
@@ -16,10 +17,8 @@ class WgClientConfig:
         self._server_host = server_host
         self._server_pubkey = server_pubkey
 
-    def dump(self, path: Path | str) -> None:
+    def dump(self) -> BytesIO:
         """Записывает пользовательский конфиг по указанному пути."""
-
-        path = Path(path)
 
         file_content = """[Interface]
 Address = {client_ip}/32
@@ -37,8 +36,7 @@ AllowedIPs = 0.0.0.0/0"""
             client_ip=self._ip,
         )
 
-        with path.open('w') as f:
-            f.write(file_content)
+        return BytesIO(file_content.encode())
 
     def update_keys(self) -> KeyPair:
         new_keys = KeyPair()

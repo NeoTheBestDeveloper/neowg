@@ -128,3 +128,9 @@ PublicKey = {pubkey}
     @property
     def clients(self) -> list[WgClientConfig]:
         return self._clients.copy()
+
+    def get_client(self, ip: str) -> WgClientConfig | None:
+        for client in self._clients:
+            if client.ip == ip:
+                return client
+        return None

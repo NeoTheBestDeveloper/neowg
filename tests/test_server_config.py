@@ -1,4 +1,5 @@
 from tempfile import NamedTemporaryFile
+from time import sleep
 
 from neowg import WgServerConfig
 
