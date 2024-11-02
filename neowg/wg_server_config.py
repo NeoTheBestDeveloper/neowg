@@ -75,8 +75,11 @@ PrivateKey = {private_key}
 AllowedIPs = {ip}/32
 # PrivateKey = {private_key}
 PublicKey = {pubkey}
+# Used = {used}
 """
-            file_content += client_content.format(pubkey=client.pubkey, ip=client.ip, private_key=client.private_key)
+            file_content += client_content.format(
+                pubkey=client.pubkey, ip=client.ip, private_key=client.private_key, used=client.used
+            )
 
         with path.open("w", encoding="utf-8") as f:
             f.write(file_content)
@@ -104,15 +107,18 @@ PublicKey = {pubkey}
     def _parse_clients(peers: list[str], server_pubkey: str, server_host: str) -> list[WgClientConfig]:
         clients: list[WgClientConfig] = []
         for peer in peers:
-            *_, ip, private_key, pubkey = peer.splitlines()
+            *_, ip, private_key, pubkey, used = peer.splitlines()
             private_key = private_key.split(' = ')[-1]
             pubkey = pubkey.split(' = ')[-1]
             ip = ip.split(' = ')[-1].split('/')[0]
+            used = used.split(' = ')[-1].split('/')[0]
+
             clients.append(WgClientConfig(
                 ip=ip,
                 server_host=server_host,
                 server_pubkey=server_pubkey,
                 keys=KeyPair(pubkey=pubkey, private_key=private_key),
+                used=used == "True",
             ))
 
         return clients
@@ -129,8 +135,9 @@ PublicKey = {pubkey}
     def clients(self) -> list[WgClientConfig]:
         return self._clients.copy()
 
-    def get_client(self, ip: str) -> WgClientConfig | None:
-        for client in self._clients:
-            if client.ip == ip:
-                return client
+    def allocate_config(self) -> WgClientConfig | None:
+        for i in range(len(self._clients)):
+            if not self._clients[i].used:
+                self._clients[i].mark_used()
+                return self._clients[i]
         return None

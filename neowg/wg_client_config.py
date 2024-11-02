@@ -9,13 +9,17 @@ class WgClientConfig:
     _server_pubkey: str
     _ip: str
     _keys: KeyPair
+    _used: bool
 
-    def __init__(self, ip: str, server_host: str, server_pubkey: str, keys: KeyPair | None = None) -> None:
+    def __init__(
+            self, ip: str, server_host: str, server_pubkey: str, keys: KeyPair | None = None, used: bool = False
+    ) -> None:
         """Создает пользовательский конфиг с указанной связкой ключей или генерирует новую."""
         self._ip = ip
         self._keys = keys or KeyPair()
         self._server_host = server_host
         self._server_pubkey = server_pubkey
+        self._used = used
 
     def dump(self) -> BytesIO:
         """Записывает пользовательский конфиг по указанному пути."""
@@ -39,8 +43,10 @@ AllowedIPs = 0.0.0.0/0"""
         return BytesIO(file_content.encode())
 
     def update_keys(self) -> KeyPair:
+        """Обновляет ключи в конфиге и помечает его как свободный"""
         new_keys = KeyPair()
         self._keys = new_keys
+        self._used = False
         return new_keys
 
     @property
@@ -55,6 +61,13 @@ AllowedIPs = 0.0.0.0/0"""
     def private_key(self) -> str:
         return self._keys.private_key
 
+    @property
+    def used(self) -> bool:
+        return self._used
+
+    def mark_used(self) -> None:
+        self._used = True
+
     def __str__(self) -> str:
         return (f"WgClientConfig(server_host={self._server_host}, server_pubkey={self._server_pubkey}), "
-                f"ip={self._ip}, keys={self._keys}")
+                f"ip={self._ip}, keys={self._keys}, used={self._used})")
