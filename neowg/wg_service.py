@@ -1,5 +1,6 @@
 import shutil
 import subprocess
+from pathlib import Path
 
 from neowg import WgServerConfig
 from neowg.config import SERVER_CONFIG_PATH
@@ -11,6 +12,9 @@ __all__ = [
 
 class WgService:
     def start(self) -> bool:
+        if not self._check_ip_forwarding():
+            self._setup_ip_forwarding()
+
         if not self._check_wireguard_exists():
             print("[WgService] WireGuard not found. Trying install wireguard.")
             if not self._install_wireguard():
@@ -75,3 +79,25 @@ class WgService:
         print(f"[WgService] stderr='{result.stderr.decode().strip()}'")
         print(f"[WgService] stdout='{result.stdout.decode().strip()}'")
         return False
+
+    def _check_ip_forwarding(self) -> bool:
+        print("[WgService] Checking if IP forwarding")
+        command = "sysctl -a | grep 'ip_forward ='"
+        result = subprocess.run(command, shell=True, capture_output=True)
+        stdout = result.stdout.decode().strip()
+
+        if not stdout:
+            return False
+
+        return int(stdout.split(' = ')[-1]) == 1
+
+    def _setup_ip_forwarding(self) -> None:
+        with Path("/etc/sysctl.conf").open("a") as f:
+            f.write("net.ipv4.ip_forward=1\nnet.ipv6.conf.all.forwarding=1")
+
+        command = "sysctl -p"
+        subprocess.run(command, shell=True, capture_output=True)
+        print("[WgService] IP forwarding setuped")
+
+if __name__ == "__main__":
+    WgService().start()
