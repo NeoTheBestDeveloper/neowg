@@ -4,6 +4,7 @@ from typing import Self
 from neowg.wg_client_config import WgClientConfig
 from neowg.key_pair import KeyPair
 from neowg.config import WIREGUARD_PORT
+from neowg.utils import get_server_ip, get_server_net_interface
 
 
 class WgServerConfig:
@@ -13,21 +14,38 @@ class WgServerConfig:
     _net_adapter: str
 
     @classmethod
-    def new(cls: type[Self], server_ip: str, net_adapter: str = "eth0", clients_count: int = 3) -> Self:
+    def new(cls: type[Self], clients_count: int = 100) -> Self:
         """Создание нового конфига."""
         config = cls()
-        config._server_ip = server_ip
+        config._server_ip = get_server_ip()
         config._keys = KeyPair()
-        config._net_adapter = net_adapter
+        config._net_adapter = get_server_net_interface()
 
         config._clients = []
 
-        for i in range(1, clients_count + 1):
-            config._clients.append(WgClientConfig(
-                ip=f"10.0.0.{i}",
-                server_host=f"{config._server_ip}:{WIREGUARD_PORT}",
-                server_pubkey=config._keys.pubkey,
-            ))
+        last_octec = 0
+        pre_last_octec = 0
+        i = 0
+        octecs = []
+
+        while i < clients_count:
+            if i % 255 == 0 and i != 0:
+                last_octec = 0
+                pre_last_octec += 1
+            else:
+                last_octec += 1
+
+            i += 1
+            octecs.append((pre_last_octec, last_octec))
+
+
+        for pre_last_octec, last_octec in octecs:
+            if not (pre_last_octec == 0 and last_octec in (0, 1)):
+                config._clients.append(WgClientConfig(
+                    ip=f"10.0.{pre_last_octec}.{last_octec}",
+                    server_host=f"{config._server_ip}:{WIREGUARD_PORT}",
+                    server_pubkey=config._keys.pubkey,
+                ))
 
         return config
 

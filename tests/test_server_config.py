@@ -5,7 +5,7 @@ from neowg import WgServerConfig
 
 
 def test_server_config() -> None:
-    config1 = WgServerConfig.new("127.0.0.1", "esnp3", 10)
+    config1 = WgServerConfig.new(10)
 
     with NamedTemporaryFile("w") as fout:
         config1.dump(fout.name)
@@ -26,7 +26,7 @@ def test_server_config() -> None:
         assert cl1.used == cl2.used
 
 def test_allocate_config() -> None:
-    config1 = WgServerConfig.new("127.0.0.1", "esnp3", 10)
+    config1 = WgServerConfig.new(10)
 
     allocated_config1 = config1.allocate_config()
     allocated_config2 = config1.allocate_config()
@@ -44,7 +44,7 @@ def test_allocate_config() -> None:
             assert not client.used
 
 def test_update_config() -> None:
-    config1 = WgServerConfig.new("127.0.0.1", "esnp3", 10)
+    config1 = WgServerConfig.new(10)
 
     allocated_config = config1.allocate_config()
 
