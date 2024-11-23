@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "neowg"
-version = "1.3.2"
+version = "1.4.0"
 description = "Library for working with wireguard configs."
 authors = ["NeoTheBestDeveloper <neothebestmain@protonmail.com>"]
 readme = "README.md"
