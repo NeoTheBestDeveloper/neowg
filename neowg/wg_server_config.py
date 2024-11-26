@@ -30,7 +30,7 @@ class WgServerConfig:
 
         while i < clients_count:
             if i % 255 == 0 and i != 0:
-                last_octec = 0
+                last_octec = 1
                 pre_last_octec += 1
             else:
                 last_octec += 1
@@ -42,7 +42,7 @@ class WgServerConfig:
         for pre_last_octec, last_octec in octecs:
             if not (pre_last_octec == 0 and last_octec in (0, 1)):
                 config._clients.append(WgClientConfig(
-                    ip=f"10.0.{pre_last_octec}.{last_octec}",
+                    ip=f"10.8.{pre_last_octec}.{last_octec}",
                     server_host=f"{config._server_ip}:{WIREGUARD_PORT}",
                     server_pubkey=config._keys.pubkey,
                 ))
@@ -71,7 +71,7 @@ class WgServerConfig:
         path = Path(path)
 
         file_content = """[Interface]
-Address = 10.0.0.1/24
+Address = 10.8.0.1/24
 PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o {net_adapter} -j MASQUERADE
 PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o {net_adapter} -j MASQUERADE
 ListenPort = {server_port}
