@@ -80,6 +80,34 @@ class WgService:
         print(f"[WgService] stdout='{result.stdout.decode().strip()}'")
         return False
 
+    def auto_start(self) -> bool:
+        print("[WgService] Set Auto Start for WireGuard service")
+        command = "systemctl enable wg-quick@wg0"
+        result = subprocess.run(command, shell=True, capture_output=True)
+
+        if result.returncode == 0:
+            print("[WgService] WireGuard Service set for auto start")
+            return True
+
+        print("[WgService] WireGuard Service set for auto start failed")
+        print(f"[WgService] stderr='{result.stderr.decode().strip()}'")
+        print(f"[WgService] stdout='{result.stdout.decode().strip()}'")
+        return False
+
+    def restart(self) -> bool:
+        print("[WgService] Restart WireGuard service")
+        command = "systemctl restart wg-quick@wg0"
+        result = subprocess.run(command, shell=True, capture_output=True)
+
+        if result.returncode == 0:
+            print("[WgService] WireGuard Service restarted")
+            return True
+
+        print("[WgService] WireGuard Service restart failed")
+        print(f"[WgService] stderr='{result.stderr.decode().strip()}'")
+        print(f"[WgService] stdout='{result.stdout.decode().strip()}'")
+        return False
+
     def _check_ip_forwarding(self) -> bool:
         print("[WgService] Checking if IP forwarding")
         command = "sysctl -a | grep 'ip_forward ='"
@@ -93,11 +121,11 @@ class WgService:
 
     def _setup_ip_forwarding(self) -> None:
         with Path("/etc/sysctl.conf").open("a") as f:
-            f.write("net.ipv4.ip_forward=1\nnet.ipv6.conf.all.forwarding=1")
+            f.write("net.ipv4.ip_forward=1\nnet.ipv6.conf.all.forwarding=1\n")
 
         command = "sysctl -p"
         subprocess.run(command, shell=True, capture_output=True)
-        print("[WgService] IP forwarding setuped")
+        print("[WgService] IP forwarding setup successful")
 
 if __name__ == "__main__":
     WgService().start()
